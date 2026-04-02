@@ -2,19 +2,29 @@
 #define CREME_H
 
 #include <arpa/inet.h>
+#include <pthread.h>
 
 #define PORT_BEUIP 9998
-#define BC_ADDR "192.168.88.255"
+#define LPSEUDO 23
 
-// Définition du type User pour la table des couples (IP + Pseudo)
-typedef struct {
-    struct in_addr ip;
-    char pseudo[50];
-} User;
+/* Structure de la liste chaînée (Etape 2.2) */
+struct elt {
+    char nom[LPSEUDO + 1];
+    char adip[16];
+    struct elt *next;
+};
 
-// Prototypes des fonctions de la librairie creme
-void lancer_serveur(char *pseudo);
-void stopper_serveur(pid_t pid_fils);
-void envoyer_commande_locale(char code, char *arg1, char *arg2);
+/* Prototypes obligatoires */
+void *serveur_udp(void *p);
+void *serveur_tcp(void *p);
+void ajouteElt(char *pseudo, char *adip);
+void supprimeElt(char *adip);
+void listeElts(void);
+void diffuser_presence(int sock, char *pseudo);
+
+/* Fonctions de requêtes (Etape 3) */
+void demandeListe(char *pseudo);
+void demandeFichier(char *pseudo, char *nomfic);
+void envoiContenu(int fd, char *reppub);
 
 #endif
