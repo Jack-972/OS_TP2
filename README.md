@@ -1,5 +1,11 @@
 # TP2 OS - Projet BEUIP - Jacques ARNAULD & Adam BOUNOUR
 
+NOM: ARNAULD
+PRENOM: Jacques
+
+NOM: BOUNOUR
+PRENOM: Adam
+
 ## Présentation du Projet
 
 Ce projet consiste en la création du protocole **BEUIP (BEUI over IP)**
