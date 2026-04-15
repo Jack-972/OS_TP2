@@ -1,10 +1,8 @@
 # TP2 OS - Projet BEUIP - Jacques ARNAULD & Adam BOUNOUR
 
-NOM: ARNAULD\
-PRENOM: Jacques
+NOM: ARNAULD, BOUNOUR\
+PRENOM: Jacques, Adam
 
-NOM: BOUNOUR\
-PRENOM: Adam
 
 ## Présentation du Projet
 
