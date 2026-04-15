@@ -18,32 +18,29 @@ int serveur_actif = 0;
 int sockfd_udp; // Définition globale pour biceps.c
 
 /* --- DÉTECTION RÉSEAU (Etape 2.1) --- */
-void diffuser_presence(int sock, char *pseudo) {
-    struct ifaddrs *ifaddr, *ifa;
-    char bcast[NI_MAXHOST];
-    char msg[100];
+void viderListe(void) {
+    pthread_mutex_lock(&mutex_liste);
+    struct elt *curr = ma_liste;
+    while (curr) {
+        struct elt *next = curr->next;
+        free(curr);
+        curr = next;
+    }
+    ma_liste = NULL;
+    pthread_mutex_unlock(&mutex_liste);
+}
 
+void diffuser_presence(int sock, char *pseudo) {
+    char msg[100];
     msg[0] = '1'; 
     sprintf(&msg[1], "BEUIP%s", pseudo);
 
-    if (getifaddrs(&ifaddr) == -1) return;
-
-    for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
-        if (ifa->ifa_addr == NULL || ifa->ifa_addr->sa_family != AF_INET) continue;
-        
-        if (getnameinfo(ifa->ifa_broadaddr, sizeof(struct sockaddr_in),
-                        bcast, NI_MAXHOST, NULL, 0, NI_NUMERICHOST) == 0) {
-            if (strcmp(bcast, "127.0.0.1") != 0) {
-                struct sockaddr_in dest;
-                memset(&dest, 0, sizeof(dest));
-                dest.sin_family = AF_INET;
-                dest.sin_port = htons(PORT_BEUIP);
-                dest.sin_addr.s_addr = inet_addr(bcast);
-                sendto(sock, msg, strlen(msg), 0, (struct sockaddr *)&dest, sizeof(dest));
-            }
-        }
-    }
-    freeifaddrs(ifaddr);
+    struct sockaddr_in dest;
+    memset(&dest, 0, sizeof(dest));
+    dest.sin_family = AF_INET;
+    dest.sin_port = htons(PORT_BEUIP);
+    dest.sin_addr.s_addr = inet_addr(ADDR_BCAST); // Utilisation du define unique
+    sendto(sock, msg, strlen(msg), 0, (struct sockaddr *)&dest, sizeof(dest));
 }
 
 /* --- GESTION DE LA LISTE (Etape 2.2) --- */
@@ -81,10 +78,9 @@ void supprimeElt(char *adip) {
 void listeElts(void) {
     pthread_mutex_lock(&mutex_liste);
     struct elt *curr = ma_liste;
-    printf("\n--- Annuaire BEUIP ---\n");
-    if (!curr) printf("(Aucun utilisateur connecté)\n");
+    // Pas de texte de décoration, juste le format demandé
     while (curr) {
-        printf("%-15s [%s]\n", curr->nom, curr->adip);
+        printf("%s : %s\n", curr->adip, curr->nom); // Consigne 4
         curr = curr->next;
     }
     pthread_mutex_unlock(&mutex_liste);
@@ -228,6 +224,33 @@ void demandeFichier(char *pseudo, char *nomfic) {
     else unlink(chemin);
 
     close(fd); close(sock); free(ip);
+}
+
+void commande(char octet1, char *message, char *pseudo) {
+    char buf[1024];
+    struct sockaddr_in dest;
+    memset(&dest, 0, sizeof(dest));
+    dest.sin_family = AF_INET;
+    dest.sin_port = htons(PORT_BEUIP);
+
+    if (octet1 == '5') { // Message à tout le monde (all)
+        dest.sin_addr.s_addr = inet_addr(ADDR_BCAST);
+        buf[0] = '9'; // Code de message reçu
+        sprintf(&buf[1], "BEUIP%s", message);
+        sendto(sockfd_udp, buf, strlen(buf), 0, (struct sockaddr *)&dest, sizeof(dest));
+    } 
+    else if (octet1 == '4') { // Message à un pseudo spécifique
+        char *ip = chercherIP(pseudo);
+        if (ip) {
+            dest.sin_addr.s_addr = inet_addr(ip);
+            buf[0] = '9';
+            sprintf(&buf[1], "BEUIP%s", message);
+            sendto(sockfd_udp, buf, strlen(buf), 0, (struct sockaddr *)&dest, sizeof(dest));
+            free(ip);
+        } else {
+            printf("Erreur : Utilisateur %s non trouvé.\n", pseudo);
+        }
+    }
 }
 
 /* --- SERVEUR UDP (Etape 1 & 2) --- */
