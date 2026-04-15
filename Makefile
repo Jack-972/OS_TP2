@@ -1,30 +1,18 @@
-# Compilateur et options
 CC = gcc
-# -DTRACE active les messages de débogage demandés à l'étape 3.4
-CFLAGS = -Wall -Wextra -g -DTRACE
-# Librairie readline pour l'interpréteur biceps
-LDFLAGS = -lreadline
+CFLAGS = -Wall -Wextra -Werror -D_REENTRANT
+LDFLAGS = -lreadline -pthread
 
-# Cibles
-TARGET = biceps
-OBJ = biceps.o creme.o gescom.o
+default: biceps
 
-# Règle par défaut
-all: $(TARGET)
+biceps: biceps.o creme.o gescom.o
+	$(CC) $(CFLAGS) -o biceps biceps.o creme.o gescom.o $(LDFLAGS)
 
-# Édition de liens finale
-$(TARGET): $(OBJ)
-	$(CC) $(CFLAGS) -o $(TARGET) $(OBJ) $(LDFLAGS)
+memory-leak: CFLAGS += -g -O0
+memory-leak: biceps.o creme.o gescom.o
+	$(CC) $(CFLAGS) -o biceps-memory-leaks biceps.o creme.o gescom.o $(LDFLAGS)
 
-# Compilation des fichiers objets
-%.o: %.c creme.h gescom.h
+%.o: %.c
 	$(CC) $(CFLAGS) -c $<
 
-# Nettoyage
 clean:
-	rm -f *.o $(TARGET) servbeuip clibeuip
-
-# Vérification des symboles exportés (Etape 3.1)
-check: creme.o
-	nm creme.o
-	objdump -t creme.o
+	rm -f *.o biceps biceps-memory-leaks
