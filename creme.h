@@ -15,6 +15,11 @@ struct elt {
     struct elt *next;
 };
 
+/* Globales partagées */
+extern int sockfd_udp;
+extern int sockfd_tcp;
+extern int serveur_actif;
+
 /* Prototypes obligatoires */
 void *serveur_udp(void *p);
 void *serveur_tcp(void *p);
@@ -30,5 +35,6 @@ void envoiContenu(int fd, char *reppub);
 
 void viderListe(void); // Pour Valgrind
 void commande(char octet1, char *message, char *pseudo);
+char *chercherIP(char *pseudo);
 
 #endif
