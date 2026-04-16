@@ -71,22 +71,25 @@ int execComExt(char **P) {
 
 /* Implémentation des commandes internes */
 int Sortie(int N, char *P[]) { 
-    (void)N; (void)P;
+    (void)N; (void)P; // Signale explicitement que les variables sont inutilisées
     exit(0); 
 }
 
 int ChangeDir(int N, char *P[]) {
     if (N > 1) chdir(P[1]);
+    else (void)P; // Optionnel ici car P[1] est utilisé, mais par sécurité
     return 1;
 }
 
 int PrintWorkDir(int N, char *P[]) {
+    (void)N; (void)P; // Correction ici pour supprimer l'erreur
     char cwd[1024];
     if (getcwd(cwd, sizeof(cwd))) printf("%s\n", cwd);
     return 1;
 }
 
 int Version(int N, char *P[]) {
+    (void)N; (void)P; // Correction ici pour supprimer l'erreur
     printf("biceps version 1.0\n");
     return 1;
 }
