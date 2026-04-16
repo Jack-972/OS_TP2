@@ -16,6 +16,7 @@ struct elt *ma_liste = NULL;
 pthread_mutex_t mutex_liste = PTHREAD_MUTEX_INITIALIZER;
 int serveur_actif = 0;
 int sockfd_udp; // Définition globale pour biceps.c
+int sockfd_tcp;
 
 /* --- DÉTECTION RÉSEAU (Etape 2.1) --- */
 void viderListe(void) {
@@ -89,29 +90,29 @@ void listeElts(void) {
 /* --- SERVEUR TCP (Etape 3.1) --- */
 void *serveur_tcp(void *p) {
     char *reppub = (char *)p;
-    int sock, nsock;
+    int nsock;
     struct sockaddr_in sin;
-    
+
     memset(&sin, 0, sizeof(sin));
     sin.sin_family = AF_INET;
     sin.sin_port = htons(PORT_BEUIP);
     sin.sin_addr.s_addr = INADDR_ANY;
 
-    sock = socket(AF_INET, SOCK_STREAM, 0);
+    sockfd_tcp = socket(AF_INET, SOCK_STREAM, 0); // Utilisez la globale
     int opt = 1;
-    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    setsockopt(sockfd_tcp, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
-    if (bind(sock, (struct sockaddr *)&sin, sizeof(sin)) < 0) pthread_exit(NULL);
-    listen(sock, 5);
+    if (bind(sockfd_tcp, (struct sockaddr *)&sin, sizeof(sin)) < 0) pthread_exit(NULL);
+    listen(sockfd_tcp, 5);
 
     while (serveur_actif) {
-        nsock = accept(sock, NULL, NULL);
+        nsock = accept(sockfd_tcp, NULL, NULL); // Utilisez la globale
         if (nsock > 0) {
             envoiContenu(nsock, reppub);
             close(nsock);
         }
     }
-    close(sock);
+    close(sockfd_tcp);
     return NULL;
 }
 
