@@ -15,6 +15,8 @@ int beuip_running = 0;
 char *reppub = "pub"; 
 
 int main() {
+    extern int serveur_actif;
+    extern int sockfd_udp; 
     majComInt();
     char *ligne;
     char prompt[100];
