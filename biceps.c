@@ -16,7 +16,8 @@ char *reppub = "pub";
 
 int main() {
     extern int serveur_actif;
-    extern int sockfd_udp; 
+    extern int sockfd_udp;
+    extern int sockfd_tcp;
     majComInt();
     char *ligne;
     char prompt[100];
@@ -30,7 +31,7 @@ int main() {
             if (analyseCom(temp) > 0) {
                 if (strcmp(Mots[0], "beuip") == 0 && NMots >= 2) {
                     
-                    /* beuip start user [cite: 32, 33, 93] */
+                    /* beuip start user */
                     if (strcmp(Mots[1], "start") == 0 && NMots == 3) {
                         if (!beuip_running) {
                             strncpy(mon_pseudo, Mots[2], LPSEUDO);
@@ -41,32 +42,31 @@ int main() {
                         }
                     } 
                     
-                    /* beuip stop [cite: 48, 96] */
+                    /* beuip stop */
                     else if (strcmp(Mots[1], "stop") == 0) {
                         if (beuip_running) {
-                            extern int serveur_actif;
-                            extern int sockfd_udp;
                             serveur_actif = 0;
-                            
-                            /* Débloquer le serveur UDP pour le join */
+
+                            /* Débloquer les deux serveurs */
                             shutdown(sockfd_udp, 2); 
-                            
+                            shutdown(sockfd_tcp, 2); // Ajoutez cette ligne pour débloquer l'accept()
+
                             pthread_join(tid_udp, NULL);
                             pthread_join(tid_tcp, NULL);
-                            
+
                             beuip_running = 0;
                             printf("Services BEUIP arrêtés.\n");
                         }
                     }
 
-                    /* beuip list [cite: 80] */
+                    /* beuip list */
                     else if (strcmp(Mots[1], "list") == 0) {
                         if (beuip_running) {
                             listeElts();
                         }
                     }
 
-                    /* beuip message <user> <message> [cite: 41, 42] */
+                    /* beuip message <user> <message> */
                     else if (strcmp(Mots[1], "message") == 0 && NMots >= 4) {
                         if (beuip_running) {
                             /* Mots[2] est le destinataire, Mots[3] est le début du message */
@@ -102,6 +102,7 @@ int main() {
     if (beuip_running) {
         serveur_actif = 0;
         shutdown(sockfd_udp, 2);
+        shutdown(sockfd_tcp, 2); // Ajoutez cette ligne ici aussi
         pthread_join(tid_udp, NULL);
         pthread_join(tid_tcp, NULL);
     }
